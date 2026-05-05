@@ -398,6 +398,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _set_service_role_secret: { Args: { p_key: string }; Returns: undefined }
       is_workspace_admin: {
         Args: { _user: string; _workspace: string }
         Returns: boolean
