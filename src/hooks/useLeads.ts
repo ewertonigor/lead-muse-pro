@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { logActivity } from "@/lib/activity";
 
 export type Lead = {
   id: string;
@@ -90,7 +91,14 @@ export function useCreateLead() {
         .select()
         .single();
       if (error) throw error;
-      return data as unknown as Lead;
+      const lead = data as unknown as Lead;
+      await logActivity({
+        workspaceId: lead.workspace_id,
+        leadId: lead.id,
+        action: "lead_created",
+        payload: { stage_id: lead.stage_id },
+      });
+      return lead;
     },
     onSuccess: (lead) => {
       qc.invalidateQueries({ queryKey: ["leads", lead.workspace_id] });
@@ -102,6 +110,11 @@ export function useUpdateLead() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, patch }: { id: string; patch: Partial<LeadInput> }) => {
+      const { data: prev } = await supabase
+        .from("leads")
+        .select("stage_id")
+        .eq("id", id)
+        .maybeSingle();
       const { data, error } = await supabase
         .from("leads")
         .update(patch as never)
@@ -109,7 +122,24 @@ export function useUpdateLead() {
         .select()
         .single();
       if (error) throw error;
-      return data as unknown as Lead;
+      const lead = data as unknown as Lead;
+      const stageChanged =
+        patch.stage_id !== undefined && prev?.stage_id !== lead.stage_id;
+      if (stageChanged) {
+        await logActivity({
+          workspaceId: lead.workspace_id,
+          leadId: lead.id,
+          action: "lead_stage_changed",
+          payload: { from_stage_id: prev?.stage_id ?? null, to_stage_id: lead.stage_id },
+        });
+      } else {
+        await logActivity({
+          workspaceId: lead.workspace_id,
+          leadId: lead.id,
+          action: "lead_updated",
+        });
+      }
+      return lead;
     },
     onSuccess: (lead) => {
       qc.invalidateQueries({ queryKey: ["leads", lead.workspace_id] });
@@ -122,6 +152,7 @@ export function useDeleteLead() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, workspaceId }: { id: string; workspaceId: string }) => {
+      await logActivity({ workspaceId, leadId: id, action: "lead_deleted" });
       const { error } = await supabase.from("leads").delete().eq("id", id);
       if (error) throw error;
       return { id, workspaceId };
