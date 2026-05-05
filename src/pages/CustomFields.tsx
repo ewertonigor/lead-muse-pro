@@ -84,7 +84,7 @@ export default function CustomFields() {
     <div className="mx-auto max-w-4xl space-y-6">
       <header className="flex items-start justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-2xl font-semibold">Campos personalizados</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Campos personalizados</h1>
           <p className="text-sm text-muted-foreground">
             Adicione campos específicos do seu negócio. Eles se aplicam a todos os leads deste workspace.
           </p>

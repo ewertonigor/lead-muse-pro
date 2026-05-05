@@ -218,7 +218,7 @@ const Index = () => {
     <div className="flex h-[calc(100vh-8rem)] flex-col gap-4">
       <header className="flex items-start justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-2xl font-semibold">Kanban</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Kanban</h1>
           <p className="text-sm text-muted-foreground">
             Arraste leads entre etapas. Campos obrigatórios são validados automaticamente.
           </p>

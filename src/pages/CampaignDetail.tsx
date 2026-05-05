@@ -86,7 +86,7 @@ export default function CampaignDetail() {
           <Button asChild variant="ghost" size="sm" className="gap-1 -ml-3">
             <Link to="/campaigns"><ArrowLeft className="h-4 w-4" /> Campanhas</Link>
           </Button>
-          <h1 className="text-2xl font-semibold">{campaign.name}</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{campaign.name}</h1>
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant={campaign.is_active ? "default" : "secondary"}>
               {campaign.is_active ? "Ativa" : "Inativa"}

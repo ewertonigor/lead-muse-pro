@@ -74,7 +74,7 @@ export default function Campaigns() {
     <div className="mx-auto max-w-5xl space-y-6">
       <header className="flex items-start justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-2xl font-semibold">Campanhas</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Campanhas</h1>
           <p className="text-sm text-muted-foreground">
             Defina contextos de outreach e a IA usa para gerar mensagens personalizadas para seus leads.
           </p>
