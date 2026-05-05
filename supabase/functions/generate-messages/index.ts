@@ -234,6 +234,22 @@ Deno.serve(async (req) => {
     });
 
     const startedAt = Date.now();
+    const logAutoFailure = async (errMessage: string) => {
+      if (!isServiceCall) return;
+      try {
+        await supabase.from("activity_log").insert({
+          workspace_id: _lead.workspace_id,
+          lead_id: _lead.id,
+          action: "message_generated",
+          payload: {
+            status: "failed",
+            campaign_id: _campaign.id,
+            error: errMessage,
+            trigger_source,
+          },
+        });
+      } catch (_) { /* best effort */ }
+    };
     const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -252,12 +268,14 @@ Deno.serve(async (req) => {
     });
 
     if (aiRes.status === 429) {
+      await logAutoFailure("rate_limited");
       return new Response(JSON.stringify({ error: "Rate limit exceeded. Try again shortly." }), {
         status: 429,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
     if (aiRes.status === 402) {
+      await logAutoFailure("credits_exhausted");
       return new Response(JSON.stringify({ error: "AI credits exhausted. Add credits to continue." }), {
         status: 402,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -265,6 +283,7 @@ Deno.serve(async (req) => {
     }
     if (!aiRes.ok) {
       const txt = await aiRes.text();
+      await logAutoFailure(`ai_gateway_error: ${txt.slice(0, 200)}`);
       return new Response(JSON.stringify({ error: `AI gateway error: ${txt}` }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -274,6 +293,7 @@ Deno.serve(async (req) => {
     const aiJson = await aiRes.json();
     const toolCall = aiJson?.choices?.[0]?.message?.tool_calls?.[0];
     if (!toolCall?.function?.arguments) {
+      await logAutoFailure("model_no_tool_call");
       return new Response(JSON.stringify({ error: "Model returned no tool call" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -283,12 +303,14 @@ Deno.serve(async (req) => {
     try {
       parsed = JSON.parse(toolCall.function.arguments);
     } catch {
+      await logAutoFailure("invalid_json_from_model");
       return new Response(JSON.stringify({ error: "Invalid JSON from model" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
     if (!parsed.variations || parsed.variations.length < 2) {
+      await logAutoFailure("too_few_variations");
       return new Response(JSON.stringify({ error: "Model returned too few variations" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -308,6 +330,7 @@ Deno.serve(async (req) => {
       .select()
       .single();
     if (insertErr) {
+      await logAutoFailure(`insert_failed: ${insertErr.message}`);
       return new Response(JSON.stringify({ error: `Insert failed: ${insertErr.message}` }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
