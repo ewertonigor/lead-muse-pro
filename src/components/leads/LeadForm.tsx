@@ -233,9 +233,9 @@ export const LeadForm = ({ mode, lead, initialStageId }: Props) => {
     const value = customData[cf.key];
     const error = errors[cf.key];
     const labelEl = (
-      <Label htmlFor={id}>
+      <Label htmlFor={id} className="text-sm font-medium text-foreground">
         {cf.label}
-        {cf.is_required && <span className="text-destructive"> *</span>}
+        {cf.is_required && <span className="text-destructive text-xs"> *</span>}
       </Label>
     );
 
@@ -298,7 +298,7 @@ export const LeadForm = ({ mode, lead, initialStageId }: Props) => {
     }
 
     return (
-      <div key={cf.id} className="space-y-2">
+      <div key={cf.id} className="space-y-1.5">
         {labelEl}
         {control}
         {error && <p className="text-sm text-destructive">{error}</p>}
