@@ -8,6 +8,8 @@ import NotFound from "./pages/NotFound.tsx";
 import Auth from "./pages/Auth.tsx";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { AppShell } from "@/components/AppShell";
+import FunnelSettings from "./pages/FunnelSettings.tsx";
 
 const queryClient = new QueryClient();
 
@@ -20,7 +22,22 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/auth" element={<Auth />} />
-            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <AppShell><Index /></AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings/funnel"
+              element={
+                <ProtectedRoute>
+                  <AppShell><FunnelSettings /></AppShell>
+                </ProtectedRoute>
+              }
+            />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
