@@ -23,6 +23,7 @@ import {
 import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { LeadMessagesTab } from "@/components/leads/LeadMessagesTab";
+import { LeadActivityTab } from "@/components/leads/LeadActivityTab";
 
 const STANDARD: { key: "name" | "email" | "phone" | "company" | "role" | "source" | "notes"; label: string }[] = [
   { key: "name", label: "Nome" },
@@ -164,9 +165,7 @@ export default function LeadDetail() {
           </TabsContent>
 
           <TabsContent value="activity" className="mt-4">
-            <Card className="p-6 text-sm text-muted-foreground">
-              Implementado na Task 10.
-            </Card>
+            <LeadActivityTab leadId={lead.id} />
           </TabsContent>
         </Tabs>
       )}
