@@ -22,6 +22,12 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
             Mini CRM SDR
           </Link>
           <nav className="flex items-center gap-2">
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/">Kanban</Link>
+            </Button>
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/campaigns">Campanhas</Link>
+            </Button>
             <Button asChild size="sm" className="gap-1">
               <Link to="/leads/new">
                 <Plus className="h-4 w-4" />

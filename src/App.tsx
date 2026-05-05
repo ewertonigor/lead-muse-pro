@@ -13,6 +13,8 @@ import FunnelSettings from "./pages/FunnelSettings.tsx";
 import CustomFields from "./pages/CustomFields.tsx";
 import LeadNew from "./pages/LeadNew.tsx";
 import LeadDetail from "./pages/LeadDetail.tsx";
+import Campaigns from "./pages/Campaigns.tsx";
+import CampaignDetail from "./pages/CampaignDetail.tsx";
 
 const queryClient = new QueryClient();
 
@@ -62,6 +64,22 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <AppShell><LeadDetail /></AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/campaigns"
+              element={
+                <ProtectedRoute>
+                  <AppShell><Campaigns /></AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/campaigns/:id"
+              element={
+                <ProtectedRoute>
+                  <AppShell><CampaignDetail /></AppShell>
                 </ProtectedRoute>
               }
             />
