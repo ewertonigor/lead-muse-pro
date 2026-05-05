@@ -154,14 +154,36 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Use service role only for bypass-free triggers; here we use the user's JWT (RLS enforces access).
-    const isServiceCall = trigger_source === "auto_stage_trigger";
-    const supabaseKey = isServiceCall
-      ? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-      : Deno.env.get("SUPABASE_ANON_KEY")!;
+    // Service-role mode is allowed only for the trigger path AND requires the auth header
+    // to actually be the service role key (cannot be forged from the client).
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    const isServiceCall =
+      trigger_source === "auto_stage_trigger" &&
+      serviceRoleKey.length > 0 &&
+      auth === `Bearer ${serviceRoleKey}`;
+    const supabaseKey = isServiceCall ? serviceRoleKey : Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, supabaseKey, {
       global: isServiceCall ? {} : { headers: { Authorization: auth } },
     });
+
+    // Dedup: skip if a generation for this (lead, campaign) happened in the last 60s
+    // (only for auto path — manual users may legitimately regenerate quickly).
+    if (isServiceCall) {
+      const since = new Date(Date.now() - 60_000).toISOString();
+      const { data: recent } = await supabase
+        .from("lead_messages")
+        .select("id")
+        .eq("lead_id", lead_id)
+        .eq("campaign_id", campaign_id)
+        .gte("created_at", since)
+        .limit(1);
+      if (recent && recent.length > 0) {
+        return new Response(JSON.stringify({ skipped: "recent_generation_exists" }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
 
     const [{ data: lead, error: leadErr }, { data: campaign, error: campErr }] =
       await Promise.all([
