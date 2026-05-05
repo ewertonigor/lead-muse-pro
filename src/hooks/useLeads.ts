@@ -86,7 +86,7 @@ export function useCreateLead() {
     mutationFn: async (input: LeadInput) => {
       const { data, error } = await supabase
         .from("leads")
-        .insert(input)
+        .insert(input as never)
         .select()
         .single();
       if (error) throw error;
@@ -104,7 +104,7 @@ export function useUpdateLead() {
     mutationFn: async ({ id, patch }: { id: string; patch: Partial<LeadInput> }) => {
       const { data, error } = await supabase
         .from("leads")
-        .update(patch)
+        .update(patch as never)
         .eq("id", id)
         .select()
         .single();
