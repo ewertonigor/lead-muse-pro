@@ -24,6 +24,8 @@ import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { LeadMessagesTab } from "@/components/leads/LeadMessagesTab";
 import { LeadActivityTab } from "@/components/leads/LeadActivityTab";
+import { UserAvatar } from "@/components/UserAvatar";
+import { formatBRPhone } from "@/lib/phone";
 
 const STANDARD: { key: "name" | "email" | "phone" | "company" | "role" | "source" | "notes"; label: string }[] = [
   { key: "name", label: "Nome" },
@@ -89,11 +91,14 @@ export default function LeadDetail() {
 
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div className="space-y-2 min-w-0">
-          <h1 className="text-2xl font-semibold truncate">{lead.name || "(sem nome)"}</h1>
-          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+          <h1 className="text-2xl font-bold tracking-tight truncate">{lead.name || "(sem nome)"}</h1>
+          <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
             {stage && <Badge variant="secondary">{stage.name}</Badge>}
             {owner ? (
-              <span>Responsável: {owner.full_name || owner.email}</span>
+              <span className="inline-flex items-center gap-2">
+                <UserAvatar email={owner.email} name={owner.full_name} size={24} />
+                {owner.full_name || owner.email}
+              </span>
             ) : (
               <span>Sem responsável</span>
             )}
@@ -134,10 +139,11 @@ export default function LeadDetail() {
                 {STANDARD.map(({ key, label }) => {
                   const v = lead[key];
                   if (!v) return null;
+                  const display = key === "phone" ? formatBRPhone(String(v)) : v;
                   return (
                     <div key={key} className={key === "notes" ? "md:col-span-2" : ""}>
                       <dt className="text-xs uppercase tracking-wide text-muted-foreground">{label}</dt>
-                      <dd className={`mt-1 ${key === "notes" ? "whitespace-pre-wrap" : ""}`}>{v}</dd>
+                      <dd className={`mt-1 ${key === "notes" ? "whitespace-pre-wrap" : ""}`}>{display}</dd>
                     </div>
                   );
                 })}
