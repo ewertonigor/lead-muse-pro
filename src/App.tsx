@@ -10,6 +10,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AppShell } from "@/components/AppShell";
 import FunnelSettings from "./pages/FunnelSettings.tsx";
+import CustomFields from "./pages/CustomFields.tsx";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <AppShell><FunnelSettings /></AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings/custom-fields"
+              element={
+                <ProtectedRoute>
+                  <AppShell><CustomFields /></AppShell>
                 </ProtectedRoute>
               }
             />
