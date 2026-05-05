@@ -9,6 +9,7 @@ import { useCustomFields, CustomField } from "@/hooks/useCustomFields";
 import { useWorkspaceMembers } from "@/hooks/useWorkspaceMembers";
 import { useCreateLead, useUpdateLead, Lead, LeadInput } from "@/hooks/useLeads";
 import { validateRequiredFields } from "@/lib/leadValidation";
+import { isValidBRPhone, toStoragePhone, formatBRPhone, localDigitCount } from "@/lib/phone";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import { PhoneInput } from "@/components/PhoneInput";
+import { UserAvatar } from "@/components/UserAvatar";
 import {
   Select,
   SelectContent,
@@ -140,11 +143,17 @@ export const LeadForm = ({ mode, lead, initialStageId }: Props) => {
       }
     }
 
+    // Phone format validation (BR)
+    if (values.phone && !isValidBRPhone(values.phone)) {
+      fieldErrors.phone = "Telefone inválido. Use formato com DDD (ex: 11 98765-4321).";
+    }
+
     const stage = stages.find((s) => s.id === values.stage_id);
+    const phoneStorage = toStoragePhone(values.phone);
     const leadValuesForValidation = {
       name: emptyToNull(values.name),
       email: emptyToNull(values.email),
-      phone: emptyToNull(values.phone),
+      phone: phoneStorage,
       company: emptyToNull(values.company),
       role: emptyToNull(values.role),
       source: emptyToNull(values.source),
@@ -171,7 +180,7 @@ export const LeadForm = ({ mode, lead, initialStageId }: Props) => {
       workspace_id: workspace.id,
       name: emptyToNull(values.name),
       email: emptyToNull(values.email),
-      phone: emptyToNull(values.phone),
+      phone: phoneStorage,
       company: emptyToNull(values.company),
       role: emptyToNull(values.role),
       source: emptyToNull(values.source),
