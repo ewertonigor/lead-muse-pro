@@ -105,7 +105,7 @@ export default function FunnelSettings() {
   );
 
   useEffect(() => {
-    document.title = "Etapas do funil · Mini CRM SDR";
+    document.title = "Etapas do funil · SDR.ai";
   }, []);
 
   const loadAll = async (initial = false) => {

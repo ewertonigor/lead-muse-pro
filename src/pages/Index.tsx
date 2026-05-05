@@ -81,7 +81,7 @@ const Index = () => {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
   useEffect(() => {
-    document.title = "Kanban · Mini CRM SDR";
+    document.title = "Kanban · SDR.ai";
   }, []);
 
   // Realtime sync

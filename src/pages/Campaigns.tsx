@@ -41,7 +41,7 @@ export default function Campaigns() {
   const [confirmDelete, setConfirmDelete] = useState<Campaign | null>(null);
 
   useEffect(() => {
-    document.title = "Campanhas · Mini CRM SDR";
+    document.title = "Campanhas · SDR.ai";
   }, []);
 
   const stageMap = useMemo(() => new Map(stages.map((s) => [s.id, s.name])), [stages]);

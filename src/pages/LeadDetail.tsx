@@ -48,7 +48,7 @@ export default function LeadDetail() {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
-    document.title = lead?.name ? `${lead.name} · Mini CRM SDR` : "Lead · Mini CRM SDR";
+    document.title = lead?.name ? `${lead.name} · SDR.ai` : "Lead · SDR.ai";
   }, [lead?.name]);
 
   const stage = useMemo(

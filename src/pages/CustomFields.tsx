@@ -45,7 +45,7 @@ export default function CustomFields() {
   const [toDelete, setToDelete] = useState<CustomField | null>(null);
 
   useEffect(() => {
-    document.title = "Campos personalizados · Mini CRM SDR";
+    document.title = "Campos personalizados · SDR.ai";
   }, []);
 
   const nextPosition = useMemo(

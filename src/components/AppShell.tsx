@@ -19,7 +19,7 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
       <header className="border-b">
         <div className="container flex h-14 items-center justify-between gap-4">
           <Link to="/" className="font-semibold">
-            Mini CRM SDR
+            SDR.ai
           </Link>
           <nav className="flex items-center gap-2">
             <Button asChild variant="ghost" size="sm">

@@ -6,7 +6,7 @@ export default function LeadNew() {
   const [params] = useSearchParams();
   const stageId = params.get("stage") ?? undefined;
   useEffect(() => {
-    document.title = "Novo lead · Mini CRM SDR";
+    document.title = "Novo lead · SDR.ai";
   }, []);
   return (
     <div className="mx-auto max-w-3xl space-y-6">
