@@ -17,10 +17,12 @@ export async function logActivity(args: {
   payload?: Record<string, unknown>;
 }) {
   try {
+    const { data: auth } = await supabase.auth.getUser();
     await supabase.from("activity_log").insert({
       workspace_id: args.workspaceId,
       lead_id: args.leadId ?? null,
       action: args.action,
+      actor_id: auth.user?.id ?? null,
       payload: (args.payload ?? {}) as never,
     });
   } catch {
