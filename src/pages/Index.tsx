@@ -263,7 +263,7 @@ const Index = () => {
                   total={bucket.total}
                   customFields={customFields}
                   membersById={membersById}
-                  messagesByLead={messageLeadIds ?? new Set()}
+                  messagesByLead={messageLeadIds ?? new Map()}
                 />
               );
             })}
@@ -274,7 +274,7 @@ const Index = () => {
                 lead={activeLead}
                 customFields={customFields}
                 owner={activeLead.owner_id ? membersById.get(activeLead.owner_id) : undefined}
-                hasMessages={messageLeadIds?.has(activeLead.id)}
+                messageCount={messageLeadIds?.get(activeLead.id) ?? 0}
               />
             )}
           </DragOverlay>
