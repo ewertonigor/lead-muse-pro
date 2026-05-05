@@ -15,6 +15,7 @@ import LeadNew from "./pages/LeadNew.tsx";
 import LeadDetail from "./pages/LeadDetail.tsx";
 import Campaigns from "./pages/Campaigns.tsx";
 import CampaignDetail from "./pages/CampaignDetail.tsx";
+import Dashboard from "./pages/Dashboard.tsx";
 
 const queryClient = new QueryClient();
 
@@ -80,6 +81,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <AppShell><CampaignDetail /></AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <AppShell><Dashboard /></AppShell>
                 </ProtectedRoute>
               }
             />

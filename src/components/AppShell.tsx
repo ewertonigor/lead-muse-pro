@@ -26,6 +26,9 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
               <Link to="/">Kanban</Link>
             </Button>
             <Button asChild variant="ghost" size="sm">
+              <Link to="/dashboard">Dashboard</Link>
+            </Button>
+            <Button asChild variant="ghost" size="sm">
               <Link to="/campaigns">Campanhas</Link>
             </Button>
             <Button asChild size="sm" className="gap-1">
