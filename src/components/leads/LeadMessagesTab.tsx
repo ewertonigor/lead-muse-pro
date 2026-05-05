@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Copy, Send, Sparkles, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
+import { Copy, Send, Sparkles, RefreshCw, ChevronDown, ChevronUp, Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useCampaigns } from "@/hooks/useCampaigns";
@@ -28,6 +28,10 @@ type LeadMessage = {
   created_at: string;
 };
 
+type ActivityRow = {
+  payload: { campaign_id?: string; trigger_source?: string } | null;
+};
+
 export function LeadMessagesTab({ leadId }: { leadId: string }) {
   const qc = useQueryClient();
   const { workspace } = useWorkspace();
@@ -38,6 +42,45 @@ export function LeadMessagesTab({ leadId }: { leadId: string }) {
   useEffect(() => {
     if (!campaignId && campaigns.length > 0) setCampaignId(campaigns[0].id);
   }, [campaigns, campaignId]);
+
+  const { data: autoCampaigns } = useQuery({
+    queryKey: ["lead-auto-campaigns", leadId],
+    enabled: !!leadId,
+    queryFn: async (): Promise<Set<string>> => {
+      const { data, error } = await supabase
+        .from("activity_log")
+        .select("payload")
+        .eq("lead_id", leadId)
+        .eq("action", "message_generated");
+      if (error) throw error;
+      const set = new Set<string>();
+      for (const r of (data ?? []) as ActivityRow[]) {
+        if (r.payload?.trigger_source === "auto_stage_trigger" && r.payload?.campaign_id) {
+          set.add(r.payload.campaign_id);
+        }
+      }
+      return set;
+    },
+  });
+
+  useEffect(() => {
+    if (!leadId) return;
+    const channel = supabase
+      .channel(`lead-messages:${leadId}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "lead_messages", filter: `lead_id=eq.${leadId}` },
+        () => {
+          qc.invalidateQueries({ queryKey: ["lead-messages", leadId] });
+          qc.invalidateQueries({ queryKey: ["lead-auto-campaigns", leadId] });
+          qc.invalidateQueries({ queryKey: ["leads-with-messages", workspace?.id] });
+        },
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [leadId, qc, workspace?.id]);
 
   const messagesQuery = useQuery({
     queryKey: ["lead-messages", leadId, campaignId],
@@ -133,6 +176,9 @@ export function LeadMessagesTab({ leadId }: { leadId: string }) {
     );
   }
 
+  const isAuto = !!campaignId && !!autoCampaigns?.has(campaignId);
+  const currentCampaignName = campaigns.find((c) => c.id === campaignId)?.name;
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-end gap-2">
@@ -142,7 +188,9 @@ export function LeadMessagesTab({ leadId }: { leadId: string }) {
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               {campaigns.map((c) => (
-                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                <SelectItem key={c.id} value={c.id}>
+                  {c.name}{autoCampaigns?.has(c.id) ? " ⚡" : ""}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -166,6 +214,16 @@ export function LeadMessagesTab({ leadId }: { leadId: string }) {
           </Button>
         )}
       </div>
+
+      {isAuto && (
+        <Card className="flex items-start gap-2 border-primary/30 bg-primary/5 p-3 text-sm">
+          <Zap className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+          <p>
+            Mensagens geradas automaticamente pela campanha{" "}
+            <strong>{currentCampaignName}</strong> quando este lead entrou na etapa-gatilho.
+          </p>
+        </Card>
+      )}
 
       {generateMut.isPending && (
         <div className="space-y-2">
