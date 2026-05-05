@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { LeadMessagesTab } from "@/components/leads/LeadMessagesTab";
 
 const STANDARD: { key: "name" | "email" | "phone" | "company" | "role" | "source" | "notes"; label: string }[] = [
   { key: "name", label: "Nome" },
@@ -159,9 +160,7 @@ export default function LeadDetail() {
           </TabsContent>
 
           <TabsContent value="messages" className="mt-4">
-            <Card className="p-6 text-sm text-muted-foreground">
-              Implementado na Task 07.
-            </Card>
+            <LeadMessagesTab leadId={lead.id} />
           </TabsContent>
 
           <TabsContent value="activity" className="mt-4">
