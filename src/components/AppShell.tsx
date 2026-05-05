@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Settings, LogOut } from "lucide-react";
+import { Settings, LogOut, Plus } from "lucide-react";
 
 export const AppShell = ({ children }: { children: ReactNode }) => {
   const { user, signOut } = useAuth();
@@ -22,6 +22,12 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
             Mini CRM SDR
           </Link>
           <nav className="flex items-center gap-2">
+            <Button asChild size="sm" className="gap-1">
+              <Link to="/leads/new">
+                <Plus className="h-4 w-4" />
+                <span className="hidden sm:inline">Novo lead</span>
+              </Link>
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="gap-2">
