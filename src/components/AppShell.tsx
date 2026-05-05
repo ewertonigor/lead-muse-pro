@@ -33,6 +33,9 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
                 <DropdownMenuItem asChild>
                   <Link to="/settings/funnel">Funil</Link>
                 </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/settings/custom-fields">Campos personalizados</Link>
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
             <span className="hidden text-sm text-muted-foreground sm:inline">
