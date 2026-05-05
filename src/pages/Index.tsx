@@ -1,16 +1,37 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useEffect, useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
 
-// IMPORTANT: Fully REPLACE this with your own code
-const PlaceholderIndex = () => {
-  // PLACEHOLDER: Replace this entire return statement with the user's app.
-  // The inline background color is intentionally not part of the design system.
+const Index = () => {
+  const { user, signOut } = useAuth();
+  const [workspaceName, setWorkspaceName] = useState<string>("");
+
+  useEffect(() => {
+    document.title = "Mini CRM SDR";
+    if (!user) return;
+    (async () => {
+      const { data } = await supabase
+        .from("workspaces")
+        .select("name")
+        .eq("owner_id", user.id)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      if (data) setWorkspaceName(data.name);
+    })();
+  }, [user]);
+
   return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#fcfbf8' }}>
-      <img data-lovable-blank-page-placeholder="REMOVE_THIS" src="/placeholder.svg" alt="Your app will live here!" />
-    </div>
+    <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background p-4">
+      <h1 className="text-2xl font-semibold">Mini CRM SDR</h1>
+      <p className="text-muted-foreground">
+        Autenticado como <span className="font-medium text-foreground">{user?.email}</span>
+        {workspaceName && <> · workspace: <span className="font-medium text-foreground">{workspaceName}</span></>}
+      </p>
+      <Button variant="outline" onClick={signOut}>Sair</Button>
+    </main>
   );
 };
-
-const Index = PlaceholderIndex;
 
 export default Index;
