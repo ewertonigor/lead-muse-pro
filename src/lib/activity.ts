@@ -21,7 +21,7 @@ export async function logActivity(args: {
       workspace_id: args.workspaceId,
       lead_id: args.leadId ?? null,
       action: args.action,
-      payload: args.payload ?? {},
+      payload: (args.payload ?? {}) as never,
     });
   } catch {
     // best-effort logging
