@@ -309,38 +309,44 @@ export const LeadForm = ({ mode, lead, initialStageId }: Props) => {
   return (
     <form onSubmit={onSubmit} className="space-y-6">
       <section className="grid gap-4 md:grid-cols-2">
-        <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="name">Nome <span className="text-destructive">*</span></Label>
+        <div className="space-y-1.5 md:col-span-2">
+          <Label htmlFor="name" className="text-sm font-medium text-foreground">
+            Nome <span className="text-destructive text-xs">*</span>
+          </Label>
           <Input id="name" value={values.name} onChange={(e) => setField("name", e.target.value)} maxLength={120} />
           {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="email">E-mail</Label>
+        <div className="space-y-1.5">
+          <Label htmlFor="email" className="text-sm font-medium text-foreground">E-mail</Label>
           <Input id="email" type="email" value={values.email ?? ""} onChange={(e) => setField("email", e.target.value)} maxLength={255} />
           {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="phone">Telefone</Label>
-          <Input id="phone" value={values.phone ?? ""} onChange={(e) => setField("phone", e.target.value)} maxLength={40} />
+        <div className="space-y-1.5">
+          <Label htmlFor="phone" className="text-sm font-medium text-foreground">Telefone</Label>
+          <PhoneInput
+            id="phone"
+            value={values.phone ?? ""}
+            onDigitsChange={(d) => setField("phone", d)}
+          />
           {errors.phone && <p className="text-sm text-destructive">{errors.phone}</p>}
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="company">Empresa</Label>
+        <div className="space-y-1.5">
+          <Label htmlFor="company" className="text-sm font-medium text-foreground">Empresa</Label>
           <Input id="company" value={values.company ?? ""} onChange={(e) => setField("company", e.target.value)} maxLength={120} />
           {errors.company && <p className="text-sm text-destructive">{errors.company}</p>}
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="role">Cargo</Label>
+        <div className="space-y-1.5">
+          <Label htmlFor="role" className="text-sm font-medium text-foreground">Cargo</Label>
           <Input id="role" value={values.role ?? ""} onChange={(e) => setField("role", e.target.value)} maxLength={120} />
           {errors.role && <p className="text-sm text-destructive">{errors.role}</p>}
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="source">Origem</Label>
+        <div className="space-y-1.5">
+          <Label htmlFor="source" className="text-sm font-medium text-foreground">Origem</Label>
           <Input id="source" value={values.source ?? ""} onChange={(e) => setField("source", e.target.value)} maxLength={120} />
           {errors.source && <p className="text-sm text-destructive">{errors.source}</p>}
         </div>
-        <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="notes">Observações</Label>
+        <div className="space-y-1.5 md:col-span-2">
+          <Label htmlFor="notes" className="text-sm font-medium text-foreground">Observações</Label>
           <Textarea id="notes" value={values.notes ?? ""} onChange={(e) => setField("notes", e.target.value)} rows={4} maxLength={2000} />
           {errors.notes && <p className="text-sm text-destructive">{errors.notes}</p>}
         </div>
@@ -349,8 +355,10 @@ export const LeadForm = ({ mode, lead, initialStageId }: Props) => {
       <Separator />
 
       <section className="grid gap-4 md:grid-cols-2">
-        <div className="space-y-2">
-          <Label>Etapa <span className="text-destructive">*</span></Label>
+        <div className="space-y-1.5">
+          <Label className="text-sm font-medium text-foreground">
+            Etapa <span className="text-destructive text-xs">*</span>
+          </Label>
           <Select value={values.stage_id} onValueChange={(v) => setField("stage_id", v)}>
             <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
             <SelectContent>
@@ -361,8 +369,8 @@ export const LeadForm = ({ mode, lead, initialStageId }: Props) => {
           </Select>
           {errors.stage_id && <p className="text-sm text-destructive">{errors.stage_id}</p>}
         </div>
-        <div className="space-y-2">
-          <Label>Responsável</Label>
+        <div className="space-y-1.5">
+          <Label className="text-sm font-medium text-foreground">Responsável</Label>
           <Select
             value={values.owner_id ?? UNASSIGNED}
             onValueChange={(v) => setField("owner_id", v === UNASSIGNED ? null : v)}
@@ -372,7 +380,10 @@ export const LeadForm = ({ mode, lead, initialStageId }: Props) => {
               <SelectItem value={UNASSIGNED}>Sem responsável</SelectItem>
               {members.map((m) => (
                 <SelectItem key={m.user_id} value={m.user_id}>
-                  {m.full_name || m.email || m.user_id.slice(0, 8)}
+                  <span className="inline-flex items-center gap-2">
+                    <UserAvatar email={m.email} name={m.full_name} size={20} />
+                    {m.full_name || m.email || m.user_id.slice(0, 8)}
+                  </span>
                 </SelectItem>
               ))}
             </SelectContent>
