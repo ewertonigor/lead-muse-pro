@@ -90,9 +90,9 @@ export default function FunnelSettings() {
     document.title = "Etapas do funil · Mini CRM SDR";
   }, []);
 
-  const loadAll = async () => {
+  const loadAll = async (initial = false) => {
     if (!workspace) return;
-    setLoading(true);
+    if (initial) setLoading(true);
     const [{ data: stageRows }, { data: cfRows }] = await Promise.all([
       supabase
         .from("stages")
@@ -107,11 +107,11 @@ export default function FunnelSettings() {
     ]);
     setStages((stageRows ?? []) as Stage[]);
     setCustomFields((cfRows ?? []) as CustomFieldOption[]);
-    setLoading(false);
+    if (initial) setLoading(false);
   };
 
   useEffect(() => {
-    if (workspace) loadAll();
+    if (workspace) loadAll(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workspace?.id]);
 
