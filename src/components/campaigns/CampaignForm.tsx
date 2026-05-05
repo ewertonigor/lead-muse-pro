@@ -127,8 +127,10 @@ export const CampaignForm = ({ mode, campaign, onSaved, onCancel }: Props) => {
   return (
     <form onSubmit={onSubmit} className="space-y-6">
       <section className="grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
-        <div className="space-y-2">
-          <Label htmlFor="name">Nome <span className="text-destructive">*</span></Label>
+        <div className="space-y-1.5">
+          <Label htmlFor="name" className="text-sm font-medium text-foreground">
+            Nome <span className="text-destructive text-xs">*</span>
+          </Label>
           <Input
             id="name"
             value={values.name}
@@ -138,20 +140,22 @@ export const CampaignForm = ({ mode, campaign, onSaved, onCancel }: Props) => {
           />
           {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
         </div>
-        <div className="flex items-center gap-2 pb-1">
+        <div className="flex h-10 items-center gap-2">
           <Switch
             id="is_active"
             checked={values.is_active}
             onCheckedChange={(v) => setField("is_active", v)}
           />
-          <Label htmlFor="is_active">Ativa</Label>
+          <Label htmlFor="is_active" className="text-sm font-medium text-foreground">Ativa</Label>
         </div>
       </section>
 
       <Separator />
 
-      <div className="space-y-2">
-        <Label htmlFor="context">Contexto <span className="text-destructive">*</span></Label>
+      <div className="space-y-1.5">
+        <Label htmlFor="context" className="text-sm font-medium text-foreground">
+          Contexto <span className="text-destructive text-xs">*</span>
+        </Label>
         <Textarea
           id="context"
           rows={6}
@@ -165,8 +169,10 @@ export const CampaignForm = ({ mode, campaign, onSaved, onCancel }: Props) => {
         </div>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="prompt">Prompt <span className="text-destructive">*</span></Label>
+      <div className="space-y-1.5">
+        <Label htmlFor="prompt" className="text-sm font-medium text-foreground">
+          Prompt <span className="text-destructive text-xs">*</span>
+        </Label>
         <Textarea
           id="prompt"
           rows={6}
@@ -182,8 +188,8 @@ export const CampaignForm = ({ mode, campaign, onSaved, onCancel }: Props) => {
 
       <Separator />
 
-      <div className="space-y-2">
-        <Label>Etapa gatilho</Label>
+      <div className="space-y-1.5">
+        <Label className="text-sm font-medium text-foreground">Etapa gatilho</Label>
         <Select
           value={values.trigger_stage_id ?? NONE}
           onValueChange={(v) => setField("trigger_stage_id", v === NONE ? null : v)}

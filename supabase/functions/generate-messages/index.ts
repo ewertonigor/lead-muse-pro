@@ -33,7 +33,10 @@ function serializeLead(lead: Lead, customFields: CustomField[]): string {
   ];
   for (const [label, key] of standard) {
     const v = (lead as Record<string, unknown>)[key];
-    if (v && String(v).trim()) lines.push(`- ${label}: ${v}`);
+    if (v && String(v).trim()) {
+      const out = key === "phone" ? formatBRPhone(String(v)) : v;
+      lines.push(`- ${label}: ${out}`);
+    }
   }
   const cd = (lead.custom_data ?? {}) as Record<string, unknown>;
   for (const cf of customFields) {
@@ -43,6 +46,15 @@ function serializeLead(lead: Lead, customFields: CustomField[]): string {
     }
   }
   return lines.join("\n");
+}
+
+function formatBRPhone(input: string): string {
+  const digits = input.replace(/\D/g, "");
+  const local = digits.length > 11 && digits.startsWith("55") ? digits.slice(2) : digits;
+  const len = local.length;
+  if (len === 0) return input;
+  if (len <= 10) return `(${local.slice(0, 2)}) ${local.slice(2, 6)}-${local.slice(6)}`;
+  return `(${local.slice(0, 2)}) ${local.slice(2, 7)}-${local.slice(7)}`;
 }
 
 function buildSystemPrompt(args: {

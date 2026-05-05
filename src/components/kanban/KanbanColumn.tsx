@@ -17,7 +17,7 @@ type Props = {
   total: number;
   customFields: CustomField[];
   membersById: Map<string, WorkspaceMember>;
-  messagesByLead: Set<string>;
+  messagesByLead: Map<string, number>;
 };
 
 export function KanbanColumn({ stage, leads, total, customFields, membersById, messagesByLead }: Props) {
@@ -50,7 +50,7 @@ export function KanbanColumn({ stage, leads, total, customFields, membersById, m
                 lead={l}
                 customFields={customFields}
                 owner={l.owner_id ? membersById.get(l.owner_id) : undefined}
-                hasMessages={messagesByLead.has(l.id)}
+                messageCount={messagesByLead.get(l.id) ?? 0}
               />
             ))
           )}

@@ -105,7 +105,7 @@ export default function FunnelSettings() {
   );
 
   useEffect(() => {
-    document.title = "Etapas do funil · Mini CRM SDR";
+    document.title = "Etapas do funil · SDR.ai";
   }, []);
 
   const loadAll = async (initial = false) => {
@@ -166,7 +166,7 @@ export default function FunnelSettings() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <header className="space-y-1">
-        <h1 className="text-2xl font-semibold">Etapas do funil</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Etapas do funil</h1>
         <p className="text-sm text-muted-foreground">
           Configure as etapas do seu pipeline de vendas. Os campos obrigatórios são validados antes de um lead entrar em uma etapa.
         </p>

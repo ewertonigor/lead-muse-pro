@@ -1,23 +1,23 @@
 import { useNavigate } from "react-router-dom";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { MessageSquare } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { UserAvatar } from "@/components/UserAvatar";
 import type { Lead } from "@/hooks/useLeads";
 import type { CustomField } from "@/hooks/useCustomFields";
 import type { WorkspaceMember } from "@/hooks/useWorkspaceMembers";
 
 type Props = {
   lead: Lead;
-  hasMessages?: boolean;
+  messageCount?: number;
   customFields: CustomField[];
   owner?: WorkspaceMember;
 };
 
-export function LeadCard({ lead, hasMessages, customFields, owner }: Props) {
+export function LeadCard({ lead, messageCount = 0, customFields, owner }: Props) {
   const navigate = useNavigate();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: lead.id, data: { stageId: lead.stage_id } });
@@ -40,14 +40,6 @@ export function LeadCard({ lead, hasMessages, customFields, owner }: Props) {
     if (cf.field_type === "boolean") return raw ? "Sim" : "Não";
     return String(raw);
   };
-
-  const ownerInitials = (owner?.full_name || owner?.email || "?")
-    .split(/\s+/)
-    .map((s) => s[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
 
   const onClick = (e: React.MouseEvent) => {
     if (isDragging) return;
@@ -76,22 +68,24 @@ export function LeadCard({ lead, hasMessages, customFields, owner }: Props) {
             <p className="truncate text-xs text-muted-foreground">{lead.company}</p>
           )}
         </div>
-        {owner && (
-          <Avatar className="h-6 w-6 shrink-0">
-            <AvatarFallback className="text-[10px]">{ownerInitials}</AvatarFallback>
-          </Avatar>
-        )}
+        {owner && <UserAvatar email={owner.email} name={owner.full_name} size={24} />}
       </div>
-      {(interesting.length > 0 || hasMessages) && (
-        <div className="flex flex-wrap items-center gap-1">
-          {interesting.map((cf) => (
-            <Badge key={cf.id} variant="secondary" className="hidden sm:inline-flex max-w-[140px] truncate text-[10px] font-normal">
-              {cf.label}: {displayValue(cf, cd[cf.key])}
-            </Badge>
-          ))}
-          {hasMessages && (
-            <span className="inline-flex items-center gap-1 text-muted-foreground" title="Tem mensagens geradas">
-              <MessageSquare className="h-3 w-3" />
+      {(interesting.length > 0 || messageCount > 0) && (
+        <div className="flex flex-wrap items-center justify-between gap-1">
+          <div className="flex flex-wrap items-center gap-1">
+            {interesting.map((cf) => (
+              <Badge key={cf.id} variant="secondary" className="hidden sm:inline-flex max-w-[140px] truncate text-[10px] font-normal">
+                {cf.label}: {displayValue(cf, cd[cf.key])}
+              </Badge>
+            ))}
+          </div>
+          {messageCount > 0 && (
+            <span
+              className="ml-auto inline-flex items-center gap-1 rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary"
+              title={`${messageCount} mensagem(ns) gerada(s)`}
+            >
+              <Sparkles className="h-3 w-3" />
+              {messageCount}
             </span>
           )}
         </div>

@@ -58,13 +58,17 @@ export function useLeadsWithMessages(workspaceId: string | undefined) {
   return useQuery({
     queryKey: ["leads-with-messages", workspaceId],
     enabled: !!workspaceId,
-    queryFn: async (): Promise<Set<string>> => {
+    queryFn: async (): Promise<Map<string, number>> => {
       const { data, error } = await supabase
         .from("lead_messages")
         .select("lead_id")
         .eq("workspace_id", workspaceId!);
       if (error) throw error;
-      return new Set((data ?? []).map((r: { lead_id: string }) => r.lead_id));
+      const m = new Map<string, number>();
+      for (const r of (data ?? []) as { lead_id: string }[]) {
+        m.set(r.lead_id, (m.get(r.lead_id) ?? 0) + 1);
+      }
+      return m;
     },
   });
 }

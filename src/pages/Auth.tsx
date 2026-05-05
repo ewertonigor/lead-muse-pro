@@ -17,7 +17,7 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    document.title = "Entrar · Mini CRM SDR";
+    document.title = "Entrar · SDR.ai";
     if (session) navigate("/", { replace: true });
   }, [session, navigate]);
 
@@ -56,8 +56,8 @@ export default function Auth() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Mini CRM SDR</CardTitle>
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl font-bold tracking-tight">SDR.ai</CardTitle>
           <CardDescription>Acesse sua conta ou crie uma nova</CardDescription>
         </CardHeader>
         <CardContent>

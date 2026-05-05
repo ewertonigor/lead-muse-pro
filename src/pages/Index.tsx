@@ -81,7 +81,7 @@ const Index = () => {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
   useEffect(() => {
-    document.title = "Kanban · Mini CRM SDR";
+    document.title = "Kanban · SDR.ai";
   }, []);
 
   // Realtime sync
@@ -218,7 +218,7 @@ const Index = () => {
     <div className="flex h-[calc(100vh-8rem)] flex-col gap-4">
       <header className="flex items-start justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-2xl font-semibold">Kanban</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Kanban</h1>
           <p className="text-sm text-muted-foreground">
             Arraste leads entre etapas. Campos obrigatórios são validados automaticamente.
           </p>
@@ -263,7 +263,7 @@ const Index = () => {
                   total={bucket.total}
                   customFields={customFields}
                   membersById={membersById}
-                  messagesByLead={messageLeadIds ?? new Set()}
+                  messagesByLead={messageLeadIds ?? new Map()}
                 />
               );
             })}
@@ -274,7 +274,7 @@ const Index = () => {
                 lead={activeLead}
                 customFields={customFields}
                 owner={activeLead.owner_id ? membersById.get(activeLead.owner_id) : undefined}
-                hasMessages={messageLeadIds?.has(activeLead.id)}
+                messageCount={messageLeadIds?.get(activeLead.id) ?? 0}
               />
             )}
           </DragOverlay>
