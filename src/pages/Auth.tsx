@@ -56,8 +56,8 @@ export default function Auth() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>SDR.ai</CardTitle>
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl font-bold tracking-tight">SDR.ai</CardTitle>
           <CardDescription>Acesse sua conta ou crie uma nova</CardDescription>
         </CardHeader>
         <CardContent>
