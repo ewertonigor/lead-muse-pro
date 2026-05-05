@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public._set_service_role_secret(TEXT);
