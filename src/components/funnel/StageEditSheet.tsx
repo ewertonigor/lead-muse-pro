@@ -34,7 +34,7 @@ const STANDARD_FIELDS: { key: string; label: string }[] = [
   { key: "company", label: "Empresa" },
   { key: "role", label: "Cargo" },
   { key: "source", label: "Origem" },
-  { key: "notes", label: "Notas" },
+  { key: "notes", label: "Observações" },
 ];
 
 const FormSchema = z.object({
