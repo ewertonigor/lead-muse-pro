@@ -24,6 +24,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { StageEditSheet, Stage, CustomFieldOption } from "@/components/funnel/StageEditSheet";
+import { useCustomFields } from "@/hooks/useCustomFields";
 
 const STANDARD_LABELS: Record<string, string> = {
   name: "Nome",
@@ -90,7 +91,11 @@ export default function FunnelSettings() {
   const { workspace, loading: wsLoading } = useWorkspace();
   const [stages, setStages] = useState<Stage[]>([]);
   const [loading, setLoading] = useState(true);
-  const [customFields, setCustomFields] = useState<CustomFieldOption[]>([]);
+  const { data: customFieldRows = [] } = useCustomFields(workspace?.id);
+  const customFields: CustomFieldOption[] = useMemo(
+    () => customFieldRows.map((f) => ({ key: f.key, label: f.label })),
+    [customFieldRows],
+  );
   const [editing, setEditing] = useState<Stage | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
 
@@ -106,20 +111,12 @@ export default function FunnelSettings() {
   const loadAll = async (initial = false) => {
     if (!workspace) return;
     if (initial) setLoading(true);
-    const [{ data: stageRows }, { data: cfRows }] = await Promise.all([
-      supabase
-        .from("stages")
-        .select("id, workspace_id, name, position, required_fields, is_default")
-        .eq("workspace_id", workspace.id)
-        .order("position", { ascending: true }),
-      supabase
-        .from("custom_fields")
-        .select("key, label")
-        .eq("workspace_id", workspace.id)
-        .order("position", { ascending: true }),
-    ]);
+    const { data: stageRows } = await supabase
+      .from("stages")
+      .select("id, workspace_id, name, position, required_fields, is_default")
+      .eq("workspace_id", workspace.id)
+      .order("position", { ascending: true });
     setStages((stageRows ?? []) as Stage[]);
-    setCustomFields((cfRows ?? []) as CustomFieldOption[]);
     if (initial) setLoading(false);
   };
 
