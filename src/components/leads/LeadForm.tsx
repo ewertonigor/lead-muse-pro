@@ -64,9 +64,10 @@ const emptyToNull = (v: string | undefined | null) => {
 type Props = {
   mode: "create" | "edit";
   lead?: Lead | null;
+  initialStageId?: string;
 };
 
-export const LeadForm = ({ mode, lead }: Props) => {
+export const LeadForm = ({ mode, lead, initialStageId }: Props) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { workspace } = useWorkspace();
@@ -78,8 +79,9 @@ export const LeadForm = ({ mode, lead }: Props) => {
 
   const defaultStageId = useMemo(() => {
     if (lead?.stage_id) return lead.stage_id;
+    if (initialStageId) return initialStageId;
     return stages[0]?.id ?? "";
-  }, [lead, stages]);
+  }, [lead, stages, initialStageId]);
 
   const [values, setValues] = useState<FormValues>({
     name: lead?.name ?? "",
