@@ -154,14 +154,36 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Use service role only for bypass-free triggers; here we use the user's JWT (RLS enforces access).
-    const isServiceCall = trigger_source === "auto_stage_trigger";
-    const supabaseKey = isServiceCall
-      ? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-      : Deno.env.get("SUPABASE_ANON_KEY")!;
+    // Service-role mode is allowed only for the trigger path AND requires the auth header
+    // to actually be the service role key (cannot be forged from the client).
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    const isServiceCall =
+      trigger_source === "auto_stage_trigger" &&
+      serviceRoleKey.length > 0 &&
+      auth === `Bearer ${serviceRoleKey}`;
+    const supabaseKey = isServiceCall ? serviceRoleKey : Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, supabaseKey, {
       global: isServiceCall ? {} : { headers: { Authorization: auth } },
     });
+
+    // Dedup: skip if a generation for this (lead, campaign) happened in the last 60s
+    // (only for auto path — manual users may legitimately regenerate quickly).
+    if (isServiceCall) {
+      const since = new Date(Date.now() - 60_000).toISOString();
+      const { data: recent } = await supabase
+        .from("lead_messages")
+        .select("id")
+        .eq("lead_id", lead_id)
+        .eq("campaign_id", campaign_id)
+        .gte("created_at", since)
+        .limit(1);
+      if (recent && recent.length > 0) {
+        return new Response(JSON.stringify({ skipped: "recent_generation_exists" }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
 
     const [{ data: lead, error: leadErr }, { data: campaign, error: campErr }] =
       await Promise.all([
@@ -212,6 +234,22 @@ Deno.serve(async (req) => {
     });
 
     const startedAt = Date.now();
+    const logAutoFailure = async (errMessage: string) => {
+      if (!isServiceCall) return;
+      try {
+        await supabase.from("activity_log").insert({
+          workspace_id: _lead.workspace_id,
+          lead_id: _lead.id,
+          action: "message_generated",
+          payload: {
+            status: "failed",
+            campaign_id: _campaign.id,
+            error: errMessage,
+            trigger_source,
+          },
+        });
+      } catch (_) { /* best effort */ }
+    };
     const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -230,12 +268,14 @@ Deno.serve(async (req) => {
     });
 
     if (aiRes.status === 429) {
+      await logAutoFailure("rate_limited");
       return new Response(JSON.stringify({ error: "Rate limit exceeded. Try again shortly." }), {
         status: 429,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
     if (aiRes.status === 402) {
+      await logAutoFailure("credits_exhausted");
       return new Response(JSON.stringify({ error: "AI credits exhausted. Add credits to continue." }), {
         status: 402,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -243,6 +283,7 @@ Deno.serve(async (req) => {
     }
     if (!aiRes.ok) {
       const txt = await aiRes.text();
+      await logAutoFailure(`ai_gateway_error: ${txt.slice(0, 200)}`);
       return new Response(JSON.stringify({ error: `AI gateway error: ${txt}` }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -252,6 +293,7 @@ Deno.serve(async (req) => {
     const aiJson = await aiRes.json();
     const toolCall = aiJson?.choices?.[0]?.message?.tool_calls?.[0];
     if (!toolCall?.function?.arguments) {
+      await logAutoFailure("model_no_tool_call");
       return new Response(JSON.stringify({ error: "Model returned no tool call" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -261,12 +303,14 @@ Deno.serve(async (req) => {
     try {
       parsed = JSON.parse(toolCall.function.arguments);
     } catch {
+      await logAutoFailure("invalid_json_from_model");
       return new Response(JSON.stringify({ error: "Invalid JSON from model" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
     if (!parsed.variations || parsed.variations.length < 2) {
+      await logAutoFailure("too_few_variations");
       return new Response(JSON.stringify({ error: "Model returned too few variations" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -286,6 +330,7 @@ Deno.serve(async (req) => {
       .select()
       .single();
     if (insertErr) {
+      await logAutoFailure(`insert_failed: ${insertErr.message}`);
       return new Response(JSON.stringify({ error: `Insert failed: ${insertErr.message}` }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
