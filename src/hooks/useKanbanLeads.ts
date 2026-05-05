@@ -4,19 +4,48 @@ import type { Lead } from "./useLeads";
 
 export type StageLeads = { stageId: string; leads: Lead[]; total: number };
 
-export function useKanbanLeads(workspaceId: string | undefined, stageIds: string[]) {
+export type KanbanFilters = {
+  search?: string;
+  ownerIds?: string[]; // include "__unassigned__" to filter unassigned
+};
+
+const UNASSIGNED = "__unassigned__";
+
+export function useKanbanLeads(
+  workspaceId: string | undefined,
+  stageIds: string[],
+  filters: KanbanFilters = {},
+) {
+  const search = filters.search?.trim() ?? "";
+  const ownerIds = filters.ownerIds ?? [];
   const queries = useQueries({
     queries: stageIds.map((stageId) => ({
-      queryKey: ["kanban-leads", workspaceId, stageId],
+      queryKey: ["kanban-leads", workspaceId, stageId, { search, ownerIds }],
       enabled: !!workspaceId,
       queryFn: async (): Promise<StageLeads> => {
-        const { data, count, error } = await supabase
+        let q = supabase
           .from("leads")
           .select("*", { count: "exact" })
           .eq("workspace_id", workspaceId!)
           .eq("stage_id", stageId)
           .order("updated_at", { ascending: false })
           .limit(50);
+        if (search.length > 0) {
+          const like = `%${search.replace(/[%,]/g, " ")}%`;
+          q = q.or(`name.ilike.${like},company.ilike.${like}`);
+        }
+        if (ownerIds.length > 0) {
+          const ids = ownerIds.filter((o) => o !== UNASSIGNED);
+          const includeUnassigned = ownerIds.includes(UNASSIGNED);
+          if (includeUnassigned && ids.length > 0) {
+            q = q.or(`owner_id.is.null,owner_id.in.(${ids.join(",")})`);
+          } else if (includeUnassigned) {
+            q = q.is("owner_id", null);
+          } else {
+            q = q.in("owner_id", ids);
+          }
+        }
+        const { data, count, error } = await q;
         if (error) throw error;
         return { stageId, leads: (data ?? []) as unknown as Lead[], total: count ?? 0 };
       },
