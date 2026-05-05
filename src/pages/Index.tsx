@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   DndContext,
   DragEndEvent,
@@ -22,6 +22,7 @@ import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { KanbanColumn } from "@/components/kanban/KanbanColumn";
 import { LeadCard } from "@/components/kanban/LeadCard";
+import { FilterBar } from "@/components/kanban/FilterBar";
 import type { Lead } from "@/hooks/useLeads";
 
 const STANDARD_LABELS: Record<string, string> = {
@@ -42,8 +43,39 @@ const Index = () => {
   const { data: members = [] } = useWorkspaceMembers(workspace?.id);
   const { data: messageLeadIds } = useLeadsWithMessages(workspace?.id);
 
-  const stageIds = useMemo(() => stages.map((s) => s.id), [stages]);
-  const stageQueries = useKanbanLeads(workspace?.id, stageIds);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const search = searchParams.get("q") ?? "";
+  const ownerFilter = useMemo(
+    () => (searchParams.get("owner") ?? "").split(",").filter(Boolean),
+    [searchParams],
+  );
+  const stageFilter = useMemo(
+    () => (searchParams.get("stage") ?? "").split(",").filter(Boolean),
+    [searchParams],
+  );
+
+  const visibleStages = useMemo(
+    () => (stageFilter.length > 0 ? stages.filter((s) => stageFilter.includes(s.id)) : stages),
+    [stages, stageFilter],
+  );
+  const stageIds = useMemo(() => visibleStages.map((s) => s.id), [visibleStages]);
+  const stageQueries = useKanbanLeads(workspace?.id, stageIds, {
+    search,
+    ownerIds: ownerFilter,
+  });
+
+  const updateParam = (key: string, value: string | string[] | null) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      const v = Array.isArray(value) ? value.join(",") : value;
+      if (!v) next.delete(key);
+      else next.set(key, v);
+      return next;
+    });
+  };
+
+  const hasFilters =
+    search.length > 0 || ownerFilter.length > 0 || stageFilter.length > 0;
 
   const [activeLead, setActiveLead] = useState<Lead | null>(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
@@ -61,16 +93,14 @@ const Index = () => {
         "postgres_changes",
         { event: "*", schema: "public", table: "leads", filter: `workspace_id=eq.${workspace.id}` },
         () => {
-          for (const sid of stageIds) {
-            qc.invalidateQueries({ queryKey: ["kanban-leads", workspace.id, sid] });
-          }
+          qc.invalidateQueries({ queryKey: ["kanban-leads", workspace.id] });
         },
       )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [workspace?.id, stageIds, qc]);
+  }, [workspace?.id, qc]);
 
   const membersById = useMemo(() => new Map(members.map((m) => [m.user_id, m])), [members]);
 
@@ -119,8 +149,9 @@ const Index = () => {
     if (!targetStageId || targetStageId === lead.stage_id) return;
 
     const sourceStageId = lead.stage_id;
-    const sourceKey = ["kanban-leads", workspace.id, sourceStageId];
-    const targetKey = ["kanban-leads", workspace.id, targetStageId];
+    const filterKey = { search, ownerIds: ownerFilter };
+    const sourceKey = ["kanban-leads", workspace.id, sourceStageId, filterKey];
+    const targetKey = ["kanban-leads", workspace.id, targetStageId, filterKey];
 
     // Optimistic update
     const prevSource = qc.getQueryData(sourceKey);
@@ -158,6 +189,16 @@ const Index = () => {
         .eq("id", lead.id);
       if (error) throw error;
       toast.success("Lead movido");
+      try {
+        await supabase.from("activity_log").insert({
+          workspace_id: workspace.id,
+          lead_id: lead.id,
+          action: "lead_stage_changed",
+          payload: { from_stage_id: sourceStageId, to_stage_id: targetStageId } as never,
+        });
+      } catch {
+        // best-effort
+      }
     } catch (err) {
       qc.setQueryData(sourceKey, prevSource);
       qc.setQueryData(targetKey, prevTarget);
@@ -187,9 +228,24 @@ const Index = () => {
         </Button>
       </header>
 
+      <FilterBar
+        search={search}
+        onSearchChange={(v) => updateParam("q", v)}
+        stages={stages}
+        selectedStages={stageFilter}
+        onStagesChange={(v) => updateParam("stage", v)}
+        members={members}
+        selectedOwners={ownerFilter}
+        onOwnersChange={(v) => updateParam("owner", v)}
+        onClear={() => setSearchParams(new URLSearchParams())}
+        hasFilters={hasFilters}
+      />
+
       {totalLeads === 0 ? (
         <Card className="flex flex-1 flex-col items-center justify-center gap-3 p-10 text-center">
-          <p className="text-muted-foreground">Nenhum lead ainda.</p>
+          <p className="text-muted-foreground">
+            {hasFilters ? "Nenhum lead corresponde aos filtros." : "Nenhum lead ainda."}
+          </p>
           <Button asChild className="gap-1">
             <Link to="/leads/new"><Plus className="h-4 w-4" /> Criar primeiro lead</Link>
           </Button>
@@ -197,7 +253,7 @@ const Index = () => {
       ) : (
         <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
           <div className="flex flex-1 gap-3 overflow-x-auto pb-2">
-            {stages.map((s) => {
+            {visibleStages.map((s) => {
               const bucket = leadsByStage.get(s.id) ?? { leads: [], total: 0 };
               return (
                 <KanbanColumn
