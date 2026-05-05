@@ -431,6 +431,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      reorder_stages: {
+        Args: { p_stage_ids: string[]; p_workspace_id: string }
+        Returns: undefined
+      }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       validate_lead_for_stage: {
