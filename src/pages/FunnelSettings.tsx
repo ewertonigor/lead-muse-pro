@@ -25,12 +25,24 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { StageEditSheet, Stage, CustomFieldOption } from "@/components/funnel/StageEditSheet";
 
+const STANDARD_LABELS: Record<string, string> = {
+  name: "Nome",
+  email: "E-mail",
+  phone: "Telefone",
+  company: "Empresa",
+  role: "Cargo",
+  source: "Origem",
+  notes: "Observações",
+};
+
 const SortableRow = ({
   stage,
   onEdit,
+  fieldLabels,
 }: {
   stage: Stage;
   onEdit: (s: Stage) => void;
+  fieldLabels: Record<string, string>;
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: stage.id });
@@ -40,6 +52,7 @@ const SortableRow = ({
     opacity: isDragging ? 0.5 : 1,
   };
   const required = stage.required_fields ?? [];
+  const labelFor = (k: string) => fieldLabels[k] ?? STANDARD_LABELS[k] ?? k;
   return (
     <Card ref={setNodeRef} style={style} className="flex items-center gap-3 p-3">
       <button
@@ -62,7 +75,7 @@ const SortableRow = ({
         <p className="text-xs text-muted-foreground mt-0.5">
           {required.length === 0
             ? "Sem campos obrigatórios"
-            : `${required.length} obrigatório${required.length > 1 ? "s" : ""}: ${required.join(", ")}`}
+            : `${required.length} obrigatório${required.length > 1 ? "s" : ""}: ${required.map(labelFor).join(", ")}`}
         </p>
       </div>
       <Button variant="ghost" size="sm" onClick={() => onEdit(stage)} className="gap-1">
@@ -116,6 +129,10 @@ export default function FunnelSettings() {
   }, [workspace?.id]);
 
   const stageIds = useMemo(() => stages.map((s) => s.id), [stages]);
+  const customLabelMap = useMemo(
+    () => Object.fromEntries(customFields.map((f) => [f.key, f.label])),
+    [customFields],
+  );
 
   const onDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
@@ -162,7 +179,7 @@ export default function FunnelSettings() {
         <SortableContext items={stageIds} strategy={verticalListSortingStrategy}>
           <div className="space-y-2">
             {stages.map((s) => (
-              <SortableRow key={s.id} stage={s} onEdit={handleEdit} />
+              <SortableRow key={s.id} stage={s} onEdit={handleEdit} fieldLabels={customLabelMap} />
             ))}
           </div>
         </SortableContext>
