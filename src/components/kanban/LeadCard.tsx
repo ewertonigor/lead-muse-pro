@@ -32,6 +32,15 @@ export function LeadCard({ lead, hasMessages, customFields, owner }: Props) {
     .filter((cf) => cd[cf.key] !== undefined && cd[cf.key] !== null && cd[cf.key] !== "")
     .slice(0, 2);
 
+  const displayValue = (cf: CustomField, raw: unknown): string => {
+    if (cf.field_type === "select") {
+      const opt = cf.options.find((o) => o.value === raw);
+      return opt?.label ?? String(raw);
+    }
+    if (cf.field_type === "boolean") return raw ? "Sim" : "Não";
+    return String(raw);
+  };
+
   const ownerInitials = (owner?.full_name || owner?.email || "?")
     .split(/\s+/)
     .map((s) => s[0])
@@ -77,7 +86,7 @@ export function LeadCard({ lead, hasMessages, customFields, owner }: Props) {
         <div className="flex flex-wrap items-center gap-1">
           {interesting.map((cf) => (
             <Badge key={cf.id} variant="secondary" className="hidden sm:inline-flex max-w-[140px] truncate text-[10px] font-normal">
-              {cf.label}: {String(cd[cf.key])}
+              {cf.label}: {displayValue(cf, cd[cf.key])}
             </Badge>
           ))}
           {hasMessages && (
