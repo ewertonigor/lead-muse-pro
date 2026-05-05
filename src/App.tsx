@@ -11,6 +11,8 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AppShell } from "@/components/AppShell";
 import FunnelSettings from "./pages/FunnelSettings.tsx";
 import CustomFields from "./pages/CustomFields.tsx";
+import LeadNew from "./pages/LeadNew.tsx";
+import LeadDetail from "./pages/LeadDetail.tsx";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +46,22 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <AppShell><CustomFields /></AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/leads/new"
+              element={
+                <ProtectedRoute>
+                  <AppShell><LeadNew /></AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/leads/:leadId"
+              element={
+                <ProtectedRoute>
+                  <AppShell><LeadDetail /></AppShell>
                 </ProtectedRoute>
               }
             />
